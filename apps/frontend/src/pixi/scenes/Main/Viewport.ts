@@ -107,10 +107,10 @@ class Viewport {
     const { x, y, scale } = this.getViewportDimensions()
 
     this.viewportPosition = {
-      x: lerp(this.viewportPosition.x, x, 0.02),
-      y: lerp(this.viewportPosition.y, y, 0.02),
+      x: lerp(this.viewportPosition.x, x, 0.05),
+      y: lerp(this.viewportPosition.y, y, 0.05),
     }
-    this.viewportScale = lerp(this.viewportScale, scale, 0.02)
+    this.viewportScale = lerp(this.viewportScale, scale, 0.05)
 
     this.root.animate({
       time: 0,

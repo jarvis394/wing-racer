@@ -21,17 +21,17 @@ export enum ShipColor {
 
 export class Player {
   public static LABEL_PREFIX = 'player_'
-  public static HITBOX_RADIUS = 18
+  public static HITBOX_RADIUS = 8
   public static BODY_RESTITUTION = 0
-  public static VELOCITY = 3
-  public static VELOCITY_FORCE = 0.00015
+  public static VELOCITY = 6
+  public static VELOCITY_FORCE = 0.00025
   public static BODY_FRICTION_AIR = 0.01
   public static ROTATE_ANGLE = 5
   public static PLAYER_COLLISION_CATEGORY = 0x0010
   public static BODY_MASS = 1
-  public static ROTATION_TORQUE_FORCE = 0.008
-  public static ROTATION_VELOCITY = 0.05
-  public static KNOCKBACK_FORCE = 0.004
+  public static ROTATION_TORQUE_FORCE = 0.0004
+  public static ROTATION_VELOCITY = 0.045
+  public static KNOCKBACK_FORCE = 0.008
 
   id: string
   world: World

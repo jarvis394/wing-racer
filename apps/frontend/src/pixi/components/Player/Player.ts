@@ -5,7 +5,10 @@ import Matter from 'matter-js'
 
 class Player extends PIXI.Container {
   private static ANGLE_CORRECTION = -90
-  private static POSITION_CORRECTION = Matter.Vector.create(0, 0)
+  private static POSITION_CORRECTION = Matter.Vector.create(8, 0)
+  private static TRIANGLE_WIDTH = 40
+  private static TRIANGLE_HEIGHT = 64
+  private static TRIANGLE_TAIL_Y_OFFSET = 6
   enginePlayer: EnginePlayer
   player: PIXI.Graphics
 
@@ -15,18 +18,17 @@ class Player extends PIXI.Container {
     this.rotation = enginePlayer.body.angle
     this.player = new PIXI.Graphics()
 
-    const triangleWidth = 45,
-      triangleHeight = 68,
-      triangleHalfway = triangleWidth / 2
+    const triangleWidthHalfway = Player.TRIANGLE_WIDTH / 2
+    const triangleHeightHalfway = Player.TRIANGLE_HEIGHT / 2
 
-    this.player.beginFill(0xffffff, 1)
-    this.player.moveTo(triangleWidth, 0)
-    this.player.lineTo(triangleHalfway, triangleHeight)
+    this.player.beginFill(0xeb4875, 1)
+    this.player.moveTo(Player.TRIANGLE_WIDTH, 0)
+    this.player.lineTo(triangleWidthHalfway, Player.TRIANGLE_HEIGHT)
     this.player.lineTo(0, 0)
-    this.player.lineTo(triangleHalfway, 5)
+    this.player.lineTo(triangleWidthHalfway, Player.TRIANGLE_TAIL_Y_OFFSET)
     this.player.endFill()
 
-    this.player.pivot.set(triangleWidth / 2, triangleWidth / 2)
+    this.player.pivot.set(triangleWidthHalfway, triangleHeightHalfway)
     this.player.position.set(
       Player.POSITION_CORRECTION.x,
       Player.POSITION_CORRECTION.y

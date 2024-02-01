@@ -5,7 +5,7 @@ import ScenesController from '../../pixi/ScenesController'
 import { SCENES } from '../../pixi/scenes'
 // import { loadAssets } from '../../assets'
 import useMountEffect from '../../hooks/useMountEffect'
-// import axios from 'axios'
+import axios from 'axios'
 
 export const PIXI_CANVAS_CONTAINER_ID = 'pixi-container'
 export const MATTER_CANVAS_CONTAINER_ID = 'matter-container'
@@ -20,9 +20,8 @@ const App: React.FC = () => {
     const scenesController = new ScenesController(app, engine.current)
 
     const start = async () => {
-      // TODO: uncomment
-      // const mapData = (await axios('/map.txt')).data
-      // engine.current?.game.loadMap(mapData)
+      const mapData = (await axios('/map.txt')).data
+      engine.current?.game.loadMap(mapData)
       // await loadAssets()
       await scenesController.loadScene(SCENES.MainScene)
     }

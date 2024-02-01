@@ -19,8 +19,7 @@ class MainScene extends PIXIObject {
     this.viewport = new Viewport(app, engine)
     this.clientEngine = new ClientEngine(engine, this.playerId)
 
-    const player = this.engine.game.world.createPlayer(this.playerId || '')
-    this.engine.game.world.addPlayer(player)
+    const player = this.engine.game.world.addPlayer(this.playerId || '')
     this.engine.game.setMe(player)
 
     this.engine.game.world.players.forEach((player) => {
