@@ -27,8 +27,8 @@
     "strictBindCallApply": false,
     "baseUrl": ".",
     "paths": {
-      "@wing-racer/shared": ["apps/shared/src/index.ts"],
       "@wing-racer/engine": ["apps/engine/src/index.ts"],
+      "@wing-racer/shared": ["apps/shared/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

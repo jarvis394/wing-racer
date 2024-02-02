@@ -56,6 +56,8 @@ export class GameMap {
     holes: Record<string, MapHole[]>
     playerSpawn: Matter.Vector
   } {
+    console.time('GameMap.parse')
+
     const bodies: MapBody[] = []
     const holes: Record<string, MapHole[]> = {}
     const lines = raw.split('\n')
@@ -148,6 +150,8 @@ export class GameMap {
       pushCurrentObjectToCorrespondingArray(currentObject)
     }
 
+    console.timeEnd('GameMap.parse')
+
     return { bodies, holes, playerSpawn }
   }
 
@@ -155,6 +159,8 @@ export class GameMap {
     bodies: MapBody[],
     holes: Record<string, MapHole[]>
   ): Matter.Composite {
+    console.time('GameMap.createGeometry')
+
     const mapComposite = Matter.Composite.create()
 
     for (const body of bodies) {
@@ -169,17 +175,31 @@ export class GameMap {
         const sweep = new poly2tri.SweepContext(body.points).addHoles(bodyHoles)
         sweep.triangulate()
         const triangles = sweep.getTriangles()
+        const parts = []
 
         for (let i = 0; i < triangles.length; i++) {
           const triangle = triangles[i]!
           const vertices = triangle.getPoints()
           const matterBody = GameMap.createBody(vertices)
-          Matter.Composite.add(composite, matterBody)
+          parts.push(matterBody)
         }
+
+        Matter.Composite.add(
+          composite,
+          Matter.Body.create({
+            parts,
+            isStatic: true,
+            friction: 0,
+            frictionStatic: 0,
+            mass: 0,
+          })
+        )
       }
 
       Matter.Composite.add(mapComposite, composite)
     }
+
+    console.timeEnd('GameMap.createGeometry')
 
     return mapComposite
   }

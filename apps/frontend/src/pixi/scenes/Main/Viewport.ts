@@ -103,9 +103,8 @@ class Viewport {
     this.root.fit(true)
   }
 
-  fit() {
+  fit(_interpolation: number) {
     const { x, y, scale } = this.getViewportDimensions()
-
     this.viewportPosition = {
       x: lerp(this.viewportPosition.x, x, 0.05),
       y: lerp(this.viewportPosition.y, y, 0.05),

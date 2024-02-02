@@ -32,6 +32,7 @@ export class Player {
   public static ROTATION_TORQUE_FORCE = 0.0004
   public static ROTATION_VELOCITY = 0.045
   public static KNOCKBACK_FORCE = 0.008
+  public static COLLISION_CONTACT_NORMAL_THRESHOLD = 1e-10
 
   id: string
   world: World
@@ -75,6 +76,7 @@ export class Player {
         if (Player.isPlayer(bodyA) || Player.isPlayer(bodyB)) {
           this.stopBoosting()
           this.collision = collision
+          break
         }
       }
     })
@@ -82,7 +84,10 @@ export class Player {
       for (const { bodyA, bodyB } of event.pairs) {
         if (Player.isPlayer(bodyA) || Player.isPlayer(bodyB)) {
           Matter.Body.setAngularVelocity(this.body, 0)
-          setTimeout(() => this.startBoosting(), 500)
+          setTimeout(
+            () => this.startBoosting(),
+            500 / this.world.matterEngine.timing.timeScale
+          )
         }
       }
     })
@@ -99,6 +104,12 @@ export class Player {
       collisionContact.normal,
       degreesToRadian(180)
     )
+
+    if (Math.abs(contactNormal.x) < Player.COLLISION_CONTACT_NORMAL_THRESHOLD)
+      contactNormal.x = 0
+    if (Math.abs(contactNormal.y) < Player.COLLISION_CONTACT_NORMAL_THRESHOLD)
+      contactNormal.y = 0
+
     const contactImpulse = Matter.Vector.mult(
       contactNormal,
       Player.KNOCKBACK_FORCE
@@ -162,6 +173,14 @@ export class Player {
         Matter.Vector.mult(getAngleVector(this.body), Player.VELOCITY_FORCE)
       )
     }
+
+    // const ray = Matter.Query.ray(
+    //   this.world.map?.composite.bodies || [],
+    //   this.body.position,
+    //   Matter.Vector.mult(Matter.Vector.neg(getAngleVector(this.body)), 1000)
+    // )
+
+    // console.log(ray)
 
     if (Matter.Body.getSpeed(this.body) > Player.VELOCITY) {
       Matter.Body.setSpeed(this.body, Player.VELOCITY)

@@ -126,7 +126,7 @@ class MainScene extends PIXIObject {
       player.update(interpolation)
     })
 
-    this.viewport.fit()
+    this.viewport.fit(interpolation)
   }
 }
 
