@@ -4,12 +4,14 @@ import Player from '../../components/Player'
 import PIXIObject from '../../PIXIObject'
 import Viewport from './Viewport'
 import { ClientEngine } from '../../../models/ClientEngine'
+import GameMap from './GameMap'
 
 class MainScene extends PIXIObject {
   players: Map<string, Player>
   playerId: string | null
   viewport: Viewport
   clientEngine: ClientEngine
+  gameMap: GameMap
 
   constructor(app: Application, engine: Engine) {
     super(app, engine)
@@ -18,6 +20,9 @@ class MainScene extends PIXIObject {
     this.playerId = params.get('id')
     this.viewport = new Viewport(app, engine)
     this.clientEngine = new ClientEngine(engine, this.playerId)
+    this.gameMap = new GameMap(app, engine)
+
+    this.viewport.addChild(this.gameMap.root)
 
     const player = this.engine.game.world.addPlayer(this.playerId || '')
     this.engine.game.setMe(player)
@@ -107,6 +112,9 @@ class MainScene extends PIXIObject {
 
   override async init() {
     await this.clientEngine.startGame()
+
+    this.gameMap.render()
+
     // this.clientEngine.addEventListener(
     //   ClientEngineEvents.INIT_ROOM,
     //   this.handleInitRoom.bind(this)

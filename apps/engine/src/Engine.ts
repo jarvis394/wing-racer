@@ -17,6 +17,7 @@ export class Engine {
       gravity: Matter.Vector.create(0, 0),
       constraintIterations: 6,
       positionIterations: 16,
+      enableSleeping: false,
     })
     this.game = new Game({
       matterEngine: this.matterEngine,

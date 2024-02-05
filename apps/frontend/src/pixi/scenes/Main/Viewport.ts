@@ -196,11 +196,11 @@ class Viewport {
   }
 
   addChild(...children: DisplayObject[]) {
-    this.root.addChild(...children)
+    return this.root.addChild(...children)
   }
 
   removeChild(...children: DisplayObject[]) {
-    this.root.removeChild(...children)
+    return this.root.removeChild(...children)
   }
 }
 

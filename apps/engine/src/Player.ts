@@ -1,6 +1,6 @@
 import Matter from 'matter-js'
 import { World } from './World'
-import { degreesToRadian, getAngleVector, lerp } from '@wing-racer/shared'
+import { degreesToRadian, getAngleVector, lerp, map } from '@wing-racer/shared'
 
 export type PlayerConstructorProps = {
   id: string
@@ -17,6 +17,26 @@ export enum ShipColor {
   CYAN,
   BLUE,
   PURPLE,
+}
+
+// TODO rewrite
+const raycast = (
+  bodies: Matter.Body[],
+  start: Matter.Vector,
+  r: Matter.Vector,
+  dist: number
+) => {
+  let ray = r
+  for (let i = 0; i < dist; i++) {
+    ray = Matter.Vector.mult(r, i)
+    ray = Matter.Vector.add(start, ray)
+    const body = Matter.Query.point(bodies, ray)[0]
+
+    if (body) {
+      return { point: ray, body: body }
+    }
+  }
+  return
 }
 
 export class Player {
@@ -54,6 +74,13 @@ export class Player {
   isServerControlled: boolean
   shipColor: ShipColor
   latency: number
+  rays: Array<
+    | {
+        point: Matter.Vector
+        body: Matter.Body
+      }
+    | undefined
+  >
   private collision?: Matter.Collision
 
   constructor({ id, position, shipColor, world }: PlayerConstructorProps) {
@@ -70,6 +97,7 @@ export class Player {
     this.isServerControlled = false
     this.shipColor = shipColor
     this.latency = 0
+    this.rays = []
 
     Matter.Events.on(this.world.matterEngine, 'collisionStart', (event) => {
       for (const { bodyA, bodyB, collision } of event.pairs) {
@@ -169,7 +197,13 @@ export class Player {
     if (this.isBoosting) {
       Matter.Body.applyForce(
         this.body,
-        this.body.position,
+        Matter.Vector.sub(
+          this.body.position,
+          Matter.Vector.mult(
+            Matter.Vector.neg(getAngleVector(this.body)),
+            Player.HITBOX_RADIUS
+          )
+        ),
         Matter.Vector.mult(getAngleVector(this.body), Player.VELOCITY_FORCE)
       )
     }
@@ -185,6 +219,114 @@ export class Player {
     if (Matter.Body.getSpeed(this.body) > Player.VELOCITY) {
       Matter.Body.setSpeed(this.body, Player.VELOCITY)
     }
+
+    if (!this.isBoosting || !this.world.map) return
+
+    const negAngleVector = Matter.Vector.neg(getAngleVector(this.body))
+    const allBodies = Matter.Composite.allBodies(this.world.map.composite)
+    // TODO export as static
+    const N_RAYS = 16
+    const DEGREE = 75
+    const RAY_DIST = 75
+    const rays = new Array(N_RAYS).fill(null).map((_, i) => {
+      const degree = map(i, 0, N_RAYS - 1, -DEGREE, DEGREE)
+      const vector = Matter.Vector.rotate(
+        negAngleVector,
+        degreesToRadian(degree)
+      )
+
+      return raycast(allBodies, this.body.position, vector, RAY_DIST)
+    })
+
+    let resultingForce = Matter.Vector.create()
+
+    rays.forEach((ray) => {
+      if (!ray) return
+
+      const sub = Matter.Vector.sub(this.body.position, ray.point)
+      const distance = Matter.Vector.magnitude(sub)
+      const forceMult = 1 - map(distance, 0, RAY_DIST, 0, 1)
+      const force = Matter.Vector.mult(
+        Matter.Vector.normalise(sub),
+        forceMult * Player.VELOCITY_FORCE
+      )
+      resultingForce = Matter.Vector.add(resultingForce, force)
+      Matter.Body.applyForce(this.body, this.body.position, force)
+    })
+
+    resultingForce = Matter.Vector.mult(
+      Matter.Vector.normalise(resultingForce),
+      Player.VELOCITY_FORCE
+    )
+    // const force = 3 - map(distanceFromWall, 0, 75, 0, 3)
+    // Matter.Body.applyForce(this.body, this.body.position, resultingForce)
+
+    // const rayLeft = raycast(
+    //   Matter.Composite.allBodies(this.world.map?.composite),
+    //   this.body.position,
+    //   Matter.Vector.rotate(negAngleVector, degreesToRadian(-30)),
+    //   75
+    // )
+    // const rayCenter = raycast(
+    //   Matter.Composite.allBodies(this.world.map?.composite),
+    //   this.body.position,
+    //   negAngleVector,
+    //   75
+    // )
+    // const rayRight = raycast(
+    //   Matter.Composite.allBodies(this.world.map?.composite),
+    //   this.body.position,
+    //   Matter.Vector.rotate(negAngleVector, degreesToRadian(30)),
+    //   75
+    // )
+
+    // const distances = rays.sort((a, b) =>
+    //   a && b ? b.distance - a.distance : 1
+    // )
+    // const minDistanceRay = distances.at(0)
+    // console.log(minDistanceRay)
+    // if (minDistanceRay !== undefined) {
+    //   const force = 3 - map(minDistanceRay.distance, 0, 75, 0, 3) / 100
+    //   Matter.Body.applyForce(
+    //     this.body,
+    //     this.body.position,
+    //     // minDistanceRay.point,
+    //     Matter.Vector.mult(
+    //       getAngleVector(this.body),
+    //       Player.VELOCITY_FORCE * force
+    //     )
+    //   )
+    // }
+
+    // distances.forEach((ray) => {
+    //   if (!ray) return
+
+    //   const force = 3 - map(ray.distance, 0, 75, 0, 3)
+    //   Matter.Body.applyForce(
+    //     this.body,
+    //     ray.point,
+    //     Matter.Vector.mult(
+    //       getAngleVector(this.body),
+    //       (Player.VELOCITY_FORCE * force) / 10000
+    //     )
+    //   )
+    // })
+
+    this.rays = rays
+
+    // this.raycastCollision = rayLeft || rayCenter || rayRight
+
+    // if (this.raycastCollision) {
+    //   const force = 3 - map(distanceFromWall, 0, 75, 0, 3)
+    //   Matter.Body.applyForce(
+    //     this.body,
+    //     this.raycastCollision.point,
+    //     Matter.Vector.mult(
+    //       getAngleVector(this.body),
+    //       Player.VELOCITY_FORCE * force
+    //     )
+    //   )
+    // }
   }
 
   public processRotate() {
